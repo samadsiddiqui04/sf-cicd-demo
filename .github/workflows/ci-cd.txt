@@ -1,0 +1,48 @@
+name: Salesforce CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Salesforce CLI
+        run: |
+          curl -sSL https://developer.salesforce.com/media/salesforce-cli/install.sh | bash
+
+      - name: Authenticate to Dev Hub
+        run: sf auth:jwt:grant --client-id ${{ secrets.SF_CLIENT_ID }} --jwt-key-file ${{ secrets.SF_JWT_KEY_FILE }} --set-default-dev-hub
+
+      - name: Create Scratch Org (Dev)
+        run: sf org:create -f config/project-scratch-def.json -a Dev -d 30
+
+      - name: Push Source to Scratch Org (Dev)
+        run: sf project:source:push -u Dev
+
+      - name: Run Tests in Scratch Org (Dev)
+        run: sf apex:test:run -u Dev --result-format human
+
+      - name: Create Scratch Org (SIT)
+        run: sf org:create -f config/project-scratch-def.json -a SIT -d 30
+
+      - name: Push Source to Scratch Org (SIT)
+        run: sf project:source:push -u SIT
+
+      - name: Run Tests in Scratch Org (SIT)
+        run: sf apex:test:run -u SIT --result-format human
+
+      - name: Create Scratch Org (Prod)
+        run: sf org:create -f config/project-scratch-def.json -a Prod -d 30
+
+      - name: Push Source to Scratch Org (Prod)
+        run: sf project:source:push -u Prod
+
+      - name: Run Tests in Scratch Org (Prod)
+        run: sf apex:test:run -u Prod --result-format human

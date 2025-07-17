@@ -1,0 +1,46 @@
+name: Deploy to Scratch Org
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install Salesforce CLI
+      run: |
+        npm install --global @salesforce/cli
+
+    - name: Authenticate Dev Hub (JWT Auth)
+      run: |
+        echo "${{ secrets.SF_JWT_KEY }}" > server.key
+        sf org login jwt \
+          --client-id ${{ secrets.SF_CONSUMER_KEY }} \
+          --jwt-key-file server.key \
+          --username ${{ secrets.SF_USERNAME }} \
+          --set-default-dev-hub
+
+    - name: Create Scratch Org
+      run: |
+        sf org create scratch \
+          --definition-file config/project-scratch-def.json \
+          --alias ci-scratch-org \
+          --set-default \
+          --duration-days 1 \
+          --wait 10
+
+    - name: Push Source
+      run: sf project deploy start --target-org ci-scratch-org
+
+    - name: Run Apex Tests
+      run: sf apex run test --target-org ci-scratch-org --result-format human
+
+    - name: Delete Scratch Org
+      if: always()
+      run: sf org delete scratch --target-org ci-scratch-org --no-prompt
