@@ -1,1 +1,2 @@
 just a normal text file
+foo bar
