@@ -1,0 +1,32 @@
+name: Deploy to dev environment on push to main
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'force-app/**'
+
+jobs:
+  Deploy-to-dev-environment:
+      runs-on: ubuntu-latest
+      environment: dev
+      steps:
+          - uses: actions/setup-node@v3
+            with:
+              node-version: '18'
+          - name: 'Checkout source code'
+            uses: actions/checkout@v4
+            with:
+              fetch-depth: '2'
+                
+          # Now Install Salesforce CLI
+          - name: 'Install SF CLI'
+            uses: salesforcecli/sf-action@v1
+            with:
+              version: latest
+                
+          - name: 'Deploy to environment with running all local tests'
+            run: |
+                echo "${{ secrets.SF_JWT_KEY }}" > server.key
+                sf org login jwt --username ${{ secrets.SF_USERNAME }} --jwt-key-file server.key --client-id ${{ secrets.SF_CONSUMER_KEY }} --instance-url ${{ vars.INSTANCE_URL }} --set-default
+                sf project deploy start --source-dir changed-sources/force-app --test-level RunLocalTests
