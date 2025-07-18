@@ -21,9 +21,7 @@ jobs:
                 
           # Now Install Salesforce CLI
           - name: 'Install SF CLI'
-            uses: salesforcecli/sf-action@v1
-            with:
-              version: latest
+            run: npm install @salesforce/cli --global
                 
           - name: 'Deploy to environment with running all local tests'
             run: |
