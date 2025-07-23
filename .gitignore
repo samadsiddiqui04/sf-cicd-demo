@@ -44,3 +44,6 @@ JWT/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+#Bitbucket
+bitbucket-pipelines.yml
