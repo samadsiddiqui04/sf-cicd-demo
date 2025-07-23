@@ -33,8 +33,8 @@ jobs:
               sf sgd source delta --to "HEAD" --from "HEAD~1" --output changed-sources/ --generate-delta --source force-app/
               echo "[INFO] Diff generated"
                 
-          - name: 'Deploy to environment with running all local tests'
+          - name: 'Run all local tests'
             run: |
                 echo "${{ secrets.SF_JWT_KEY }}" > server.key
                 sf org login jwt --username ${{ secrets.SF_USERNAME }} --jwt-key-file server.key --client-id ${{ secrets.SF_CONSUMER_KEY }} --instance-url ${{ vars.INSTANCE_URL }} --set-default
-                sf project deploy start --source-dir changed-sources/force-app --test-level RunLocalTests
+                sf apex run test --test-level RunLocalTests --result-format human
